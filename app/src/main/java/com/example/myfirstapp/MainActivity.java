@@ -9,6 +9,7 @@ import java.text.DecimalFormat;
 import android.hardware.SensorManager;
 import java.util.LinkedList;
 
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -43,16 +44,21 @@ public class MainActivity extends Activity implements SensorEventListener {
     int max_iterations;
     int one_second_ms = 1000000;
     boolean live = false;
+    float accel;
+    float freezeI;
+    float energy;
+    float locoBand;
+    float freezeBand;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        SampleRate = 32;
-        FFTSize = 128;
+        SampleRate = 64;
+        FFTSize = 256;
         orientation = 1;
         iteration = 0;
-        update_rate = 1;
-        max_iterations = SampleRate*update_rate;
+        update_rate = 2;
+        max_iterations = SampleRate/update_rate;
 
         int SampleDelay = one_second_ms/SampleRate;
         fft = new FFT(FFTSize);
@@ -105,6 +111,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             //tv3.setText("0: " + linear[0] + "  1: " + linear[1] +"  2: " + linear[2]);
             //x.add(linear[orientation]);
             x.add(linear[0]*(float)(1000/9.8)); //  m/ s^2
+            accel = linear[0];
             x.removeFirst();
         }
         /*AccelView.setText("Live samples:");
@@ -115,6 +122,8 @@ public class MainActivity extends Activity implements SensorEventListener {
             iteration = 0;
             DoCalc();
         }
+        Log.i("Values " ,"=" + String.valueOf(accel) + "=" + String.valueOf(freezeI) + "=" + String.valueOf(energy) + "=" + String.valueOf(locoBand) + "=" + String.valueOf(freezeBand) );
+
     }
 
     public void DoCalc(){
@@ -159,6 +168,10 @@ public class MainActivity extends Activity implements SensorEventListener {
             //tv1.append("\n " + i + " , " + integration_multiplier + ", " + sum_magnitude_freeze);
             DFTView.append("\n " + precision2.format((double)i*SampleRate/(double)FFTSize) + " Hz :  "+  precision.format(bin_power[i]) + "  |  " + precision2.format(100*bin_power[i]/power_sum)  );
         }
+        locoBand = sum_magnitude_loco;
+        freezeBand = sum_magnitude_freeze;
+        freezeI = sum_magnitude_freeze / sum_magnitude_loco;
+        energy = sum_magnitude_freeze + sum_magnitude_loco;
         tv2.setText("Freeze Index : " + precision2.format(sum_magnitude_freeze) + "/" + precision2.format(sum_magnitude_loco) + "=" + precision2.format(sum_magnitude_freeze / sum_magnitude_loco) );
         tv3.setText("Energy : " + precision2.format(sum_magnitude_freeze + sum_magnitude_loco) );
     }
