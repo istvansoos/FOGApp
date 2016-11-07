@@ -20,6 +20,10 @@ import android.widget.TextView;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 
+import android.net.Uri;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+
 public class MainActivity extends Activity implements SensorEventListener {
     TextView DFTView=null;
     TextView tv1=null;
@@ -27,6 +31,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     TextView tv3=null;
     TextView AccelView=null;
     Button button=null;
+    TextView fi=null;
     private SensorManager mSensorManager;
     Sensor linearSensor;
     FFT fft;
@@ -71,12 +76,14 @@ public class MainActivity extends Activity implements SensorEventListener {
         DFTView = (TextView) findViewById(R.id.DFTView);
         AccelView = (TextView) findViewById(R.id.AccelView);
         button = (Button) findViewById(R.id.buttonFFT);
+        fi = (TextView) findViewById(R.id.FOGindicator);
 
         tv1.setVisibility(View.VISIBLE);
         tv2.setVisibility(View.VISIBLE);
         tv3.setVisibility(View.VISIBLE);
         DFTView.setVisibility(View.VISIBLE);
         AccelView.setVisibility(View.VISIBLE);
+        fi.setVisibility(View.INVISIBLE);
 
         tv1.setText("Sample rate: " + SampleRate + "Hz;   DFT Size: " + FFTSize );
 
@@ -174,6 +181,8 @@ public class MainActivity extends Activity implements SensorEventListener {
         energy = sum_magnitude_freeze + sum_magnitude_loco;
         tv2.setText("Freeze Index : " + precision2.format(sum_magnitude_freeze) + "/" + precision2.format(sum_magnitude_loco) + "=" + precision2.format(sum_magnitude_freeze / sum_magnitude_loco) );
         tv3.setText("Energy : " + precision2.format(sum_magnitude_freeze + sum_magnitude_loco) );
+
+        onFOG(freezeI, power_sum);
     }
 
     public void Doo(View view){
@@ -204,5 +213,22 @@ public class MainActivity extends Activity implements SensorEventListener {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void onFOG(float freezeIndex, float power_sum){
+        if(freezeI >= 3 && power_sum >= 4000){
+            fi.setVisibility(View.VISIBLE);
+            fi.setText("FREEZE");
+            try {
+                Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+                r.play();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        else{
+            fi.setVisibility(View.INVISIBLE);
+        }
     }
 }
